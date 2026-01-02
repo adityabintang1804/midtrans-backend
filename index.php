@@ -6,7 +6,8 @@ use Midtrans\Snap;
 
 // ================= MIDTRANS CONFIG =================
 // GANTI DENGAN KEY SANDBOX PUNYA KAMU
-Config::$serverKey = 'SB-Mid-server-n0lw4lVD4DWswj-r6Kv7ExCL';
+Config::$serverKey = 'Mid-server-n0lw4lVD4DWswj-r6Kv7ExCL';
+Config::$clientKey = 'Mid-client-s3Fpp8DYlCOiqsAL';
 Config::$isProduction = false;
 Config::$isSanitized = true;
 Config::$is3ds = true;

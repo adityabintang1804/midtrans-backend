@@ -6,7 +6,7 @@ header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Server Key SANDBOX (ganti dengan milik Anda)
-$server_key = "Mid-server-A-JWJf-MhPgVWtpk9qnePyP";
+$server_key = "Mid-server-n0lw4lVD4DWswj-r6Kv7ExCL";
 
 // Terima data dari Android
 $json = file_get_contents('php://input');

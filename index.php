@@ -4,7 +4,7 @@ require __DIR__ . '/vendor/autoload.php';
 use Midtrans\Config;
 use Midtrans\Snap;
 
-Config::$serverKey = 'SB-Mid-server-PASTE-DARI-DASHBOARD';
+Config::$serverKey = 'SB-Mid-server-n0lw4lVD4DWswj-r6Kv7ExCL';
 Config::$isProduction = false;
 Config::$isSanitized = true;
 Config::$is3ds = true;

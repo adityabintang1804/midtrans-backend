@@ -1,29 +1,35 @@
 <?php
-header("Content-Type: application/json");
+require __DIR__ . '/vendor/autoload.php';
 
-$serverKey = getenv("MIDTRANS_SERVER_KEY");
+use Midtrans\Config;
+use Midtrans\Snap;
 
-$payload = [
-    "transaction_details" => [
-        "order_id" => "ORDER-" . time(),
-        "gross_amount" => 10000
+Config::$serverKey = 'SB-Mid-server-PASTE-DARI-DASHBOARD';
+Config::$isProduction = false;
+Config::$isSanitized = true;
+Config::$is3ds = true;
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(404);
+    echo "POST only";
+    exit;
+}
+
+$params = [
+    'transaction_details' => [
+        'order_id' => 'ORDER-' . time(),
+        'gross_amount' => 10000
+    ],
+    'customer_details' => [
+        'first_name' => 'Adit',
+        'email' => 'adit@test.com',
+        'phone' => '08123456789'
     ]
 ];
 
-$ch = curl_init("https://app.sandbox.midtrans.com/snap/v1/transactions");
+$snapToken = Snap::getSnapToken($params);
 
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST => true,
-    CURLOPT_HTTPHEADER => [
-        "Content-Type: application/json",
-        "Accept: application/json",
-        "Authorization: Basic " . base64_encode($serverKey . ":")
-    ],
-    CURLOPT_POSTFIELDS => json_encode($payload)
+header('Content-Type: application/json');
+echo json_encode([
+    'token' => $snapToken
 ]);
-
-$response = curl_exec($ch);
-curl_close($ch);
-
-echo $response;

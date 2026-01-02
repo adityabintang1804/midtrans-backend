@@ -3,46 +3,88 @@ require __DIR__ . '/vendor/autoload.php';
 
 use Midtrans\Config;
 use Midtrans\Snap;
+use Midtrans\Transaction;
 
 // ================= MIDTRANS CONFIG =================
-// GANTI DENGAN KEY SANDBOX PUNYA KAMU
 Config::$serverKey = 'SB-Mid-server-n0lw4lVD4DWswj-r6Kv7ExCL';
 Config::$clientKey = 'SB-Mid-client-s3Fpp8DYlCOiqsAL';
 Config::$merchantId = 'G340626276';
 Config::$isProduction = false;
 Config::$isSanitized = true;
 Config::$is3ds = true;
+Config::$appendNotifUrl = true;
 
-// ================= ONLY POST =================
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+// ================= HANDLE NOTIFICATION =================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['REQUEST_URI'], '/notification') !== false) {
+    $postData = json_decode(file_get_contents("php://input"), true);
+    
+    if ($postData === null) {
+        $postData = $_POST;
+    }
+    
+    $notification = Transaction::notification();
+    file_put_contents(__DIR__ . '/notification_log.txt', date('Y-m-d H:i:s') . ' - ' . json_encode($notification) . "\n", FILE_APPEND);
+    
     http_response_code(200);
-    echo "OK";
     exit;
 }
 
-// ================= TRANSACTION DATA =================
-$params = [
-    'transaction_details' => [
-        'order_id' => 'ORDER-' . time(),
-        'gross_amount' => 10000
-    ],
-    'customer_details' => [
-        'first_name' => 'Adit',
-        'email' => 'adit@test.com',
-        'phone' => '08123456789'
-    ]
-];
-
 // ================= GENERATE SNAP TOKEN =================
-try {
-    $snapToken = Snap::getSnapToken($params);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'token' => $snapToken
-    ]);
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'error' => $e->getMessage()
-    ]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['REQUEST_URI'], '/notification') === false) {
+    $postData = json_decode(file_get_contents("php://input"), true);
+    
+    // Ambil data dari request atau gunakan default
+    $orderData = $postData ?? [];
+    
+    $params = [
+        'transaction_details' => [
+            'order_id' => 'ORDER-' . time() . '-' . rand(1000, 9999),
+            'gross_amount' => $orderData['gross_amount'] ?? 10000
+        ],
+        'customer_details' => [
+            'first_name' => $orderData['first_name'] ?? 'Adit',
+            'email' => $orderData['email'] ?? 'adit@test.com',
+            'phone' => $orderData['phone'] ?? '08123456789',
+            'billing_address' => [
+                'first_name' => $orderData['first_name'] ?? 'Adit',
+                'address' => $orderData['address'] ?? 'Jl. Test',
+                'city' => $orderData['city'] ?? 'Jakarta',
+                'postal_code' => $orderData['postal_code'] ?? '12345',
+                'country_code' => 'IDN'
+            ]
+        ],
+        'item_details' => [
+            [
+                'id' => 'ITEM1',
+                'price' => $orderData['gross_amount'] ?? 10000,
+                'quantity' => 1,
+                'name' => 'Test Item'
+            ]
+        ]
+    ];
+    
+    try {
+        $snapToken = Snap::getSnapToken($params);
+        header('Content-Type: application/json');
+        http_response_code(200);
+        echo json_encode([
+            'success' => true,
+            'token' => $snapToken
+        ]);
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+    exit;
 }
+
+// ================= DEFAULT GET =================
+http_response_code(200);
+echo json_encode([
+    'message' => 'Midtrans Backend is Running',
+    'status' => 'OK'
+]);
+?>

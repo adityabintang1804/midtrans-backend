@@ -8,7 +8,6 @@ use Midtrans\Transaction;
 // ================= MIDTRANS CONFIG =================
 Config::$serverKey = 'SB-Mid-server-n0lw4lVD4DWswj-r6Kv7ExCL';
 Config::$clientKey = 'SB-Mid-client-s3Fpp8DYlCOiqsAL';
-Config::$merchantId = 'G340626276';
 Config::$isProduction = false;
 Config::$isSanitized = true;
 Config::$is3ds = true;
@@ -39,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['REQUEST_URI'], '/n
     $params = [
         'transaction_details' => [
             'order_id' => 'ORDER-' . time() . '-' . rand(1000, 9999),
-            'gross_amount' => $orderData['gross_amount'] ?? 10000
+            'gross_amount' => intval($orderData['gross_amount'] ?? 10000)
         ],
         'customer_details' => [
             'first_name' => $orderData['first_name'] ?? 'Adit',
@@ -56,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['REQUEST_URI'], '/n
         'item_details' => [
             [
                 'id' => 'ITEM1',
-                'price' => $orderData['gross_amount'] ?? 10000,
+                'price' => intval($orderData['gross_amount'] ?? 10000),
                 'quantity' => 1,
                 'name' => 'Test Item'
             ]
@@ -64,7 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['REQUEST_URI'], '/n
     ];
     
     try {
+        error_log("Snap Token Request: " . json_encode($params));
+        
         $snapToken = Snap::getSnapToken($params);
+        
+        error_log("Snap Token Generated: " . $snapToken);
+        
         header('Content-Type: application/json');
         http_response_code(200);
         echo json_encode([
@@ -72,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['REQUEST_URI'], '/n
             'token' => $snapToken
         ]);
     } catch (Exception $e) {
+        error_log("Error: " . $e->getMessage());
         http_response_code(400);
         echo json_encode([
             'success' => false,
@@ -85,6 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['REQUEST_URI'], '/n
 http_response_code(200);
 echo json_encode([
     'message' => 'Midtrans Backend is Running',
-    'status' => 'OK'
+    'status' => 'OK',
+    'server_key_set' => !empty(Config::$serverKey),
+    'client_key_set' => !empty(Config::$clientKey)
 ]);
 ?>
